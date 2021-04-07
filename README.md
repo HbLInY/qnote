@@ -1,5 +1,7 @@
 # qnote
 
+购物速记软件
+
 ## Project setup
 ```
 npm install
