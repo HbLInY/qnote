@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "precache-manifest.9d70a5e84cac8f6ec523b17abed30342.js"
+  "precache-manifest.4f34ee4ef2195ab9b80a3ab99c514e76.js"
 );
 
 workbox.core.setCacheNameDetails({prefix: "qnote"});
