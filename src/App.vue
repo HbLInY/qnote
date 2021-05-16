@@ -37,62 +37,82 @@
                       {{ history.time }}
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
-                      <v-sheet elevation="10" rounded="xl">
-                        <div class="pa-4">
-                          <v-chip
-                            v-for="item in history.items"
-                            :key="item.id"
-                            color="primary"
-                            class="mr-2 my-2"
+                      <v-card flat>
+                        <v-card-actions class="pt-0">
+                          <v-spacer></v-spacer>
+                          <v-btn
+                            color="error"
+                            small
+                            @click="deleteHistory(index)"
                           >
-                            {{ item.name }}
-                            <v-divider vertical class="mx-2"></v-divider>
-                            {{ item.expect }}
-                          </v-chip>
-                        </div>
-                      </v-sheet>
+                            删除
+                          </v-btn>
+                        </v-card-actions>
+                        <v-sheet elevation="10" rounded="xl">
+                          <div class="pa-4">
+                            <v-chip
+                              v-for="item in history.items"
+                              :key="item.id"
+                              color="primary"
+                              class="mr-2 my-2"
+                            >
+                              {{ item.name }}
+                              <v-divider vertical class="mx-2"></v-divider>
+                              {{ item.expect }}
+                            </v-chip>
+                          </div>
+                        </v-sheet>
+                      </v-card>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
                 </v-expansion-panels>
+                <v-dialog v-model="historyDeleteConfirm" persistent>
+                  <v-card flat>
+                    <v-card-title>
+                      确认删除？
+                    </v-card-title>
+                    <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn
+                        text
+                        color="secondary"
+                        @click="cancelDeleteHistory"
+                      >
+                        取消
+                      </v-btn>
+                      <v-btn text color="error" @click="doDeleteHistory">
+                        删除
+                      </v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-dialog>
               </v-tab-item>
               <v-tab-item :value="tabSelections.First">
                 <v-container fluid>
                   <v-row>
                     <template v-for="item in currentTemplate.items">
-                      <v-col cols="6" :key="item.id">
-                        <v-card>
-                          <v-card-title @click="selectItem(item)">
-                            {{ item.name }}
-                            <v-spacer></v-spacer>
-                            <v-icon
-                              color="success"
-                              v-if="planItems.some(i => i.id === item.id)"
-                            >
-                              mdi-check
-                            </v-icon>
-                          </v-card-title>
-                          <v-card-text @click="selectItem(item)">
-                            预计购入数量: {{ item.expect }}
-                          </v-card-text>
-                          <v-card-actions>
-                            <v-btn
-                              color="success"
-                              small
-                              @click.stop="editItem(item)"
-                            >
-                              编辑
-                            </v-btn>
-                            <v-spacer></v-spacer>
-                            <v-btn
-                              color="error"
-                              smalli
-                              @click.stop="deleteItem(item)"
-                            >
-                              删除
-                            </v-btn>
-                          </v-card-actions>
-                        </v-card>
-                      </v-col>
+                      <v-card :key="item.id" class="ml-2 mb-2" min-width="100">
+                        <v-card-text @click="selectItem(item)" class="pb-1">
+                          {{ item.expect }}: {{ item.name }}
+                        </v-card-text>
+                        <v-card-actions class="pt-1">
+                          <v-btn icon x-small @click.stop="editItem(item)">
+                            <v-icon>mdi-pencil</v-icon>
+                          </v-btn>
+                          <v-spacer></v-spacer>
+                          <v-icon
+                            color="success"
+                            x-small
+                            v-if="planItems.some(i => i.id === item.id)"
+                          >
+                            mdi-check
+                          </v-icon>
+                          <v-spacer></v-spacer>
+                          <v-btn icon x-small @click.stop="deleteItem(item)">
+                            <v-icon>mdi-delete</v-icon>
+                          </v-btn>
+                        </v-card-actions>
+                      </v-card>
                     </template>
                   </v-row>
                 </v-container>
@@ -108,26 +128,17 @@
                   </v-row>
                   <v-row>
                     <template v-for="item in notYetItems">
-                      <v-col cols="6" :key="item.id">
-                        <v-card>
-                          <v-card-title>
-                            {{ item.name }}
-                          </v-card-title>
-                          <v-card-text>
-                            预计购入数量: {{ item.expect }}
-                          </v-card-text>
-                          <v-card-actions>
-                            <v-spacer></v-spacer>
-                            <v-btn
-                              small
-                              color="success"
-                              @click="purchase(item)"
-                            >
-                              已购
-                            </v-btn>
-                          </v-card-actions>
-                        </v-card>
-                      </v-col>
+                      <v-card :key="item.id" min-width="100" class="ml-2 mb-2">
+                        <v-card-text class="pb-1">
+                          {{ item.expect }}: {{ item.name }}
+                        </v-card-text>
+                        <v-card-actions class="pt-1">
+                          <v-spacer></v-spacer>
+                          <v-btn small color="success" @click="purchase(item)">
+                            已购
+                          </v-btn>
+                        </v-card-actions>
+                      </v-card>
                     </template>
                   </v-row>
                 </v-container>
@@ -142,22 +153,17 @@
                   </v-row>
                   <v-row>
                     <template v-for="item in alreadyItems">
-                      <v-col cols="6" :key="item.id">
-                        <v-card>
-                          <v-card-title>
-                            {{ item.name }}
-                          </v-card-title>
-                          <v-card-text>
-                            购入数量: {{ item.expect }}
-                          </v-card-text>
-                          <v-card-actions>
-                            <v-spacer></v-spacer>
-                            <v-btn small color="error" @click="cancel(item)">
-                              取消
-                            </v-btn>
-                          </v-card-actions>
-                        </v-card>
-                      </v-col>
+                      <v-card min-width="100" :key="item.id" class="ml-2 mb-2">
+                        <v-card-text class="pb-1">
+                          {{ item.expect }}:{{ item.name }}
+                        </v-card-text>
+                        <v-card-actions class="pt-1">
+                          <v-spacer></v-spacer>
+                          <v-btn small color="error" @click="cancel(item)">
+                            取消
+                          </v-btn>
+                        </v-card-actions>
+                      </v-card>
                     </template>
                   </v-row>
                 </v-container>
@@ -446,9 +452,11 @@ export default {
       confirmBackDialog: false,
       confirmEndDialog: false,
       confirmStartDialog: false,
+      historyDeleteConfirm: false,
 
       histories: [],
-      selectedHistory: null
+      selectedHistory: null,
+      selectedToDeleteHistoryIndex: null
     };
   },
   created() {
@@ -534,7 +542,11 @@ export default {
     },
     selectAll() {
       if (this.planItems.length !== this.currentTemplate.items.length) {
-        this.currentTemplate.items.forEach(i => this.planItems.push(i.clone()));
+        this.currentTemplate.items.forEach(i => {
+          if (!this.planItems.some(pi => pi.id === i.id)) {
+            this.planItems.push(i.clone());
+          }
+        });
       } else {
         this.planItems = [];
       }
@@ -544,7 +556,6 @@ export default {
       this.closeTempplateManagementDialog();
     },
     selectTemplate(template) {
-      console.log("selected");
       if (
         this.selectedTemplate &&
         this.selectedTemplate.name === template.name
@@ -633,6 +644,25 @@ export default {
         return;
       }
       this.selectedHistory = history;
+    },
+    deleteHistory(historyIndex) {
+      this.selectedToDeleteHistoryIndex = historyIndex;
+      this.historyDeleteConfirm = true;
+    },
+    cancelDeleteHistory() {
+      this.selectedToDeleteHistoryIndex = null;
+      this.historyDeleteConfirm = false;
+    },
+    doDeleteHistory() {
+      this.histories.splice(this.selectedToDeleteHistoryIndex, 1);
+      try {
+        const historiesData = this.histories.map(h => h.toData());
+        localStorage.setItem("histories", JSON.stringify(historiesData));
+      } catch (e) {
+        console.log("LocalStorage not available.");
+      }
+      this.selectedHistory = null;
+      this.cancelDeleteHistory();
     }
   },
   mounted() {
