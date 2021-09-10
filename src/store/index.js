@@ -1,6 +1,8 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import Template from "../models/template";
+import { LocalStorageKeys, NoteTypes } from "../util/const";
+import LocalStorageManager from "../util/local-storage-manager";
 
 Vue.use(Vuex);
 
@@ -8,12 +10,28 @@ export default new Vuex.Store({
   state: {
     items: [],
     templates: [],
-    currentTemplate: Template.restoreCurrent()
+    currentTemplate: Template.restoreCurrent(),
+    currentNoteType: null
   },
   getters: {
     items: state => state.items,
     templates: state => state.templates,
-    currentTemplate: state => state.currentTemplate
+    currentTemplate: state => state.currentTemplate,
+    currentNoteType(state) {
+      if (!state.currentNoteType) {
+        state.currentNoteType = LocalStorageManager.getItem(
+          LocalStorageKeys.CurrentNoteType
+        );
+      }
+      if (!state.currentNoteType) {
+        state.currentNoteType = NoteTypes.Shopping;
+        LocalStorageManager.setItem(
+          LocalStorageKeys.CurrentNoteType,
+          state.currentNoteType
+        );
+      }
+      return state.currentNoteType;
+    }
   },
   mutations: {
     setTemplates(state, templates) {
@@ -49,6 +67,13 @@ export default new Vuex.Store({
       } catch (e) {
         console.log("LocalStorage not available.");
       }
+    },
+    setNoteType(state, typeIndex) {
+      state.currentNoteType = typeIndex;
+      LocalStorageManager.setItem(
+        LocalStorageKeys.CurrentNoteType,
+        state.currentNoteType
+      );
     }
   },
   actions: {
@@ -67,6 +92,9 @@ export default new Vuex.Store({
     },
     removeTemplate({ commit }, template) {
       commit("removeTemplate", template);
+    },
+    setNoteType({ commit }, typeIndex) {
+      commit("setNoteType", typeIndex);
     }
   },
   modules: {}
