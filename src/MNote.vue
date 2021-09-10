@@ -252,7 +252,6 @@ export default {
   },
   created() {
     this.memoList = MemoList.restore();
-    console.log(this.memoList);
     const currentEditingMemo = LocalStorageManager.getItem(
       LocalStorageKeys.CurrentEditingMemo
     );

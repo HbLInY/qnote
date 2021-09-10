@@ -528,7 +528,6 @@ export default {
       this.editedItem = new Item("", 1);
     },
     deleteItem(item) {
-      console.log(item);
       if (item) {
         this.currentTemplate.removeItem(item);
         this.currentTemplate.saveCurrent();
