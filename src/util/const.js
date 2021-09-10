@@ -17,7 +17,8 @@ const LocalStorageKeys = {
   CurrentNoteType: "currentNoteType",
   SeparateMark: "separateMark",
   CurrentEditingMemo: "currentEditingMemo",
-  MemoList: "memoList"
+  MemoList: "memoList",
+  ProcessingMemoId: "processingMemoId"
 };
 
 export { ItemStates, NoteTypes, LocalStorageKeys, NoteTypeNames };

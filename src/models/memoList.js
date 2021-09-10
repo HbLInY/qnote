@@ -27,6 +27,10 @@ export default class MemoList {
     return this._memos.find(m => m.id === memo.id);
   }
 
+  findById(id) {
+    return this._memos.find(m => m.id === id);
+  }
+
   createOrUpdate(memo) {
     if (this.has(memo)) {
       const target = this.find(memo);

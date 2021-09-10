@@ -68,7 +68,12 @@
               <v-btn class="ml-2" small color="primary" @click="editMemo(item)">
                 编辑
               </v-btn>
-              <v-btn class="ml-2" small color="error" @click="removeMemo(item)">
+              <v-btn
+                class="ml-2"
+                small
+                color="error"
+                @click="confirmDeleteMemo(item)"
+              >
                 删除
               </v-btn>
             </template>
@@ -84,19 +89,40 @@
             </v-row>
           </v-container>
         </template>
-        <template v-if="tab === tabSelections.Process">
-          <v-container v-if="processingMemo" class="d-flex">
-            <template v-for="(ct, index) in processingMemo.content">
-              <v-btn
-                :color="ct.selected ? 'grey' : 'success'"
-                :key="index"
-                @click="selectPart(ct)"
-                class="mr-2"
-              >
-                {{ ct.text }}
-              </v-btn>
-            </template>
+        <template v-if="tab === tabSelections.Process && processingMemo">
+          <v-container fluid class="mt-1">
+            <v-row class="py-2 px-1">
+              <template v-for="(ct, index) in notSelectedContent">
+                <v-chip
+                  color="success"
+                  large
+                  :key="index"
+                  @click="selectPart(ct)"
+                  class="mr-1 mb-1"
+                >
+                  {{ ct.text }}
+                </v-chip>
+              </template>
+            </v-row>
           </v-container>
+          <template v-if="selectedContent.length > 0">
+            <v-divider></v-divider>
+            <v-container fluid>
+              <v-row class="py-2 px-1">
+                <template v-for="(ct, index) in selectedContent">
+                  <v-chip
+                    color="grey"
+                    large
+                    :key="index"
+                    @click="selectPart(ct)"
+                    class="mr-1 mb-1"
+                  >
+                    {{ ct.text }}
+                  </v-chip>
+                </template>
+              </v-row>
+            </v-container>
+          </template>
         </template>
       </template>
     </qnote-content>
@@ -177,6 +203,18 @@
         </template>
       </template>
     </qnote-footer>
+    <v-dialog v-model="memoDeleteConfirmModalShown" persistent>
+      <v-card max-width="500">
+        <v-card-title>是否删除？</v-card-title>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text color="error" @click="removeMemo">删除</v-btn>
+          <v-btn text color="secondary" @click="closeMemoDeleteConfirmModal">
+            取消
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
@@ -207,7 +245,9 @@ export default {
         { text: "名称", value: "name", sortable: false },
         { text: "操作", value: "action", sortable: false }
       ],
-      processingMemo: null
+      processingMemo: null,
+      memoDeleteConfirmModalShown: false,
+      memoToDelete: null
     };
   },
   created() {
@@ -216,17 +256,42 @@ export default {
     const currentEditingMemo = LocalStorageManager.getItem(
       LocalStorageKeys.CurrentEditingMemo
     );
+    const processingMemoId = LocalStorageManager.getItem(
+      LocalStorageKeys.ProcessingMemoId
+    );
     if (currentEditingMemo) {
       const memoData = JSON.parse(currentEditingMemo);
       this.editingMemo = Memo.fromData(memoData);
       this.editingMemo.enableAutoSave();
       this.tab = this.tabSelections.Edit;
+    } else if (processingMemoId) {
+      const processingMemo = this.memoList.findById(processingMemoId);
+      if (processingMemo) {
+        this.processingMemo = processingMemo;
+        this.tab = this.tabSelections.Process;
+      }
+    }
+  },
+  computed: {
+    notSelectedContent() {
+      if (this.processingMemo) {
+        return this.processingMemo.content.filter(c => !c.selected);
+      }
+      return [];
+    },
+    selectedContent() {
+      if (this.processingMemo) {
+        return this.processingMemo.content.filter(c => c.selected);
+      }
+      return [];
     }
   },
   methods: {
     goToAddMemo() {
       this.tab = this.tabSelections.Edit;
       this.editingMemo = new Memo();
+      this.tempName = this.editingMemo.name;
+      this.tempMark = this.editingMemo.separateMark;
       this.editingMemo.enableAutoSave();
     },
     backToList() {
@@ -260,6 +325,7 @@ export default {
     },
     processMemo(memo) {
       this.processingMemo = memo;
+      LocalStorageManager.setItem(LocalStorageKeys.ProcessingMemoId, memo.id);
       this.tab = this.tabSelections.Process;
     },
     editMemo(memo) {
@@ -269,10 +335,23 @@ export default {
       this.tempMark = this.editingMemo.separateMark;
       this.tab = this.tabSelections.Edit;
     },
-    removeMemo(memo) {
-      this.memoList.remove(memo);
+    confirmDeleteMemo(memo) {
+      this.memoToDelete = memo;
+      this.memoDeleteConfirmModalShown = true;
+    },
+    closeMemoDeleteConfirmModal() {
+      this.memoToDelete = null;
+      this.memoDeleteConfirmModalShown = false;
+    },
+    removeMemo() {
+      if (this.memoToDelete) {
+        this.memoList.remove(this.memoToDelete);
+      }
+
+      this.closeMemoDeleteConfirmModal();
     },
     returnToList() {
+      LocalStorageManager.removeItem(LocalStorageKeys.ProcessingMemoId);
       this.processingMemo = null;
       this.tab = this.tabSelections.List;
     },
